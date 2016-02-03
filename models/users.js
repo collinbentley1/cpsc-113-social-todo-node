@@ -4,11 +4,22 @@ mongoose.connect('mongodb://localhost:27017/social_todo');
 
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
+    
+var stringField = {
+        type: String, 
+        minlength: 1,
+        maxlength: 50
+}
 
 var UserSchema = new Schema({
-    email: String,
-    name: String,
-    hashed_password: String
+    email: {
+        type:String,
+        minlength: 1,
+        maxlength: 50,
+        lowercase: true
+    },
+    name: stringField,
+    hashed_password: stringField
 });
 
 // assign a function to the "methods" object of our UserSchema

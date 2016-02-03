@@ -26,19 +26,21 @@ app.get('/', function (req, res) {
 
 
 app.post('/user/register', function (req, res) {
+    if (req.body.password !== req.body.password_confirmation){
+        return res.render('index', {errors: "Your password and password confimation do not match."});
+    }
     var newUser = new Users();
     newUser.hashed_password = req.body.password;
     newUser.email = req.body.email;
     newUser.name = req.body.fl_name;
     newUser.save(function(err){
         if (err){
-            res.send('Unfortunately, we are not accepting new users at this time.')
+            res.render('index',{errors: err});
         }else{
             res.redirect('/');
         }
         })
     
-    console.log('The user has the email address' , req.body.email);
 });
 app.post('/user/login', function (req, res) {
     res.render('index');
