@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/social_todo');
+mongoose.connect(process.env.MONGO_URL);
 
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;

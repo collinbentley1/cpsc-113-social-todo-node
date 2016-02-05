@@ -1,4 +1,4 @@
-//Require//
+//Require// //Must Initialize MONGO_URL and SESSION_SECRET//
 
 var express = require('express');
 var app = express();
@@ -6,6 +6,15 @@ var exphbs  = require('express-handlebars');
 var bodyParser = require('body-parser');
 var Users = require('./models/users.js');
 var session = require('express-session');
+var MongoDBStore = require('connect-mongodb-session')(session);
+
+//Database for storing sessionIds on the server//
+
+var store = new MongoDBStore({ 
+    uri: process.env.MONGO_URL,
+    collection: 'sessions'
+      });
+
 
 //Configure//
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -15,7 +24,8 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: 'auto' }
+  cookie: { secure: 'auto' },
+  store: store
 }))
 
 app.use(function(req, res, next){
@@ -31,7 +41,7 @@ app.use(function(req, res, next){
     }
 })
 
-//Splash//
+//Above passes to one of the below//
 
 app.get('/', function (req, res) {
    Users.count(function (err, users) {
@@ -41,7 +51,7 @@ app.get('/', function (req, res) {
        }else{
        res.render('index', {
            userCount : users.length,
-                      currentUser: res.locals.currentUser
+           currentUser: res.locals.currentUser
 
 
        });
@@ -68,6 +78,13 @@ app.post('/user/register', function (req, res) {
         })
     
 });
+
+app.get('/user/logout', function(req, res){
+    req.session.destroy();
+    res.redirect('/');
+})
+
+
 app.post('/user/login', function (req, res) {
     res.render('index');
 });
