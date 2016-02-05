@@ -69,13 +69,14 @@ app.post('/user/register', function (req, res) {
     newUser.email = req.body.email;
     newUser.name = req.body.fl_name;
     newUser.save(function(err, user){
-        req.session.userId = user._id;
         if (err){
+            err = "Your registration could not be processed.";
             res.render('index',{errors: err});
         }else{
+            req.session.userId = user._id;
             res.redirect('/');
         }
-        })
+        });
     
 });
 
@@ -86,10 +87,26 @@ app.get('/user/logout', function(req, res){
 
 
 app.post('/user/login', function (req, res) {
-    res.render('index');
+    var user = Users.findOne({email: req.body.email}, function(err, user){
+        if(err || !user){
+            res.send('Incorrect email or password.')
+            return;
+        }
+        user.comparePassword(req.body.password, function (err, isMatch){
+        if (err || !isMatch){
+            res.send('Incorrect email or password.');
+
+        }else{
+        req.session.userId = user._id;
+        res.redirect('/')  
+        }
+    })
+    })
 });
 
 
 app.listen(process.env.PORT, function () {
   console.log('Example app listening on port' + process.env.PORT);
 });
+
+
