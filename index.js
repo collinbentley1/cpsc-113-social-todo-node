@@ -85,20 +85,30 @@ app.post('/user/register', function (req, res) {
     if (req.body.password !== req.body.password_confirmation){
         return res.render('index', {errors: "Your password and password confimation do not match."});
     }
-    var newUser = new Users();
-    newUser.hashed_password = req.body.password;
-    newUser.email = req.body.email;
-    newUser.name = req.body.fl_name;
-    newUser.save(function(err, user){
-        if (err){
-            err = "Your registration could not be processed.";
-            res.render('index',{errors: err});
-        }else{
-            req.session.userId = user._id;
-            res.redirect('/');
-        }
-        });
-    
+      if (req.body.password.length < 1) {
+    err = 'Bad password';
+    res.render('index', {errors: err});
+    return;
+  }
+ // Save the new user
+  var newUser = new Users();
+  newUser.hashed_password = req.body.password;
+  newUser.email = req.body.email;
+  newUser.name = req.body.fl_name;
+  newUser.save(function(err, user){
+    // If there are no errors, redirect to home page
+    if(user && !err){
+      req.session.userId = user._id;
+      res.redirect('/');
+    }
+    var errors = "Error registering you.";
+    if(err){
+      if(err.errmsg && err.errmsg.match(/duplicate/)){
+        errors = 'Account with this email already exists!';
+      }
+      return res.render('index', {errors: errors});
+    }
+  });
 });
 
 app.get('/user/logout', function(req, res){
@@ -108,23 +118,25 @@ app.get('/user/logout', function(req, res){
 
 
 app.post('/user/login', function (req, res) {
-    var user = Users.findOne({email: req.body.email}, function(err, user){
-        if(err || !user){
-            res.send;
-            return;
-        }
-        user.comparePassword(req.body.password, function (err, isMatch){
-        if (err || !isMatch){
-            res.send('Incorrect email or password.');
+  // Try to find this user by email
+  Users.findOne({email: req.body.email}, function(err, user){
 
-        }else{
+    if(err || !user){
+      res.send('Invalid email address');
+      return;
+    }
+
+    // See if the hash of their passwords match
+    user.comparePassword(req.body.password, function(err, isMatch){
+      if(err || !isMatch){
+        res.send('Invalid password');
+      }else{
         req.session.userId = user._id;
-        res.redirect('/')  ;
-        }
+        res.redirect('/');
+      }
     });
-    });
+  });
 });
-
 
 app.use(isLoggedIn);
 
