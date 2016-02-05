@@ -16,6 +16,7 @@ var store = new MongoDBStore({
   uri: process.env.MONGO_URL,
   collection: 'sessions'
 });
+app.use(express.static('css'));
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -156,6 +157,62 @@ app.post('/task/create', function(req, res){
     }
   });
 });
+
+// Handle deletion of a task on task form by the task id; verify that user is owner
+app.post('/task/delete/:id', function(req, res){
+  Tasks.remove({_id: req.params.id}, function(err) {
+    if (err) {
+      res.send('error deleting task');
+    }
+    else {
+      res.redirect('/');
+    }
+  });
+});
+
+// Handle completion of task by task id
+app.post('/task/complete/:id', function(req, res){
+  Tasks.findById(req.params.id, function(err, task){
+    if (err || !task) {
+      res.send('error completing task');
+    }
+    else {
+      if (task.isComplete)
+      {
+        Tasks.update({_id: req.params.id}, {isComplete: false}, function(err){
+        if (err) {
+          res.send('error completing task');
+        }
+        else {
+          res.redirect('/');
+        }
+        });
+      }
+      else {
+      Tasks.update({_id: req.params.id}, {isComplete: true}, function(err){
+      if (err) {
+        res.send('error completing task');
+      }
+      else {
+        res.redirect('/');
+      }
+      });
+      }
+    }
+  });
+});
+
+//add CSS//
+
+
+
+
+
+
+
+
+
+
 
 // Start the server
 app.listen(process.env.PORT, function () {
