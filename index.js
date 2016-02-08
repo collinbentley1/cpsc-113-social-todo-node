@@ -9,14 +9,22 @@ mongoose.connect(process.env.MONGO_URL);
 var Users = require('./models/users.js');
 var Tasks = require('./models/tasks.js');
 
+//serve CSS//
+//var connect = require('connect');
+//var serveStatic = require('serve-static'); 
+//var app = connect(); 
 
+//app.use(serveStatic('../public')); 
+
+//
+app.use(express.static(__dirname + '/public'));
 
 // Configure our app
 var store = new MongoDBStore({
   uri: process.env.MONGO_URL,
   collection: 'sessions'
 });
-app.use(express.static('css'));
+app.use(express.static('public'));
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -64,7 +72,16 @@ function loadUserTasks(req, res, next) {
       {owner: res.locals.currentUser},
       {collaborators: res.locals.currentUser.email}])
     .exec(function(err, tasks){
-      if(!err){
+      if(err){
+        res.send("error loading tasks");
+      }
+      else {
+        for (var i = 0; i < tasks.length; i++)
+        {
+          if (tasks[i].owner.toString() == res.locals.currentUser._id.toString()) {
+            tasks[i].isOwner = true;
+          }
+        }
         res.locals.tasks = tasks;
       }
       next();
@@ -85,6 +102,14 @@ app.post('/user/register', function (req, res) {
     err = 'Bad password';
     res.render('index', {errors: err});
     return;
+  }
+  if (req.body.password.length > 50)
+  {
+    return res.render('index', {errors: 'password too long'});
+  }
+  if (req.body.fl_name.length < 1)
+  {
+    return res.render('index', {errors: 'name too short'});
   }
 
   // Save the new user
@@ -112,17 +137,18 @@ app.post('/user/register', function (req, res) {
 
 app.post('/user/login', function (req, res) {
   // Try to find this user by email
+  
   Users.findOne({email: req.body.email}, function(err, user){
 
     if(err || !user){
-      res.send('Invalid email address');
+      return res.render('index', {errors: 'Invalid email address'});
       return;
     }
 
     // See if the hash of their passwords match
     user.comparePassword(req.body.password, function(err, isMatch){
-      if(err || !isMatch){
-        res.send('Invalid password');
+      if(!isMatch || err){
+        return res.render('index', {errors: 'Invalid password'});
       }else{
         req.session.userId = user._id;
         res.redirect('/');

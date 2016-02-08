@@ -1,7 +1,10 @@
 <head>
-        <link rel="stylesheet" href="public/style.css">
+    <link rel="stylesheet" href="/style.css">
 
 </head>
+<body>
+
+<a href="/user/logout" class="logout">Logout</a>
 
 <h1>Social todo app for cpsc113</h1>
 
@@ -15,25 +18,34 @@
     <h2>Welcome, {{currentUser.name}}</h2>
     <div>
         <h4>Your Tasks</h4>
-
         {{#if tasks}}
-            <ul>
             {{#each tasks}}
-                <li class="tasks-list-item">
-                    {{#if this.isComplete}}
-                  <span class="task-title">COMPLETED</span>
-                  {{else}}
-                  <span class="task-title">{{this.title}}</span>
-                  {{/if}}
-                  <form method="post" action='/task/delete/{{this._id}}'>
-                    <input type="submit" name="delete-task" class="delete-task" value="Delete">
-                  </form>
-                  <form method="post" action='/task/complete/{{this._id}}'>
-                    <input type="submit" name="toggle-task" class="toggle-task" value="Mark complete">
-                  </form>
-                </li>
+                {{#if this.isComplete}}
+                    <div class="tasks-list-item complete-task">
+                        <span class="task-title">COMPLETED</span>
+                        {{#if this.isOwner}}
+                            <form method="post" action='/task/delete/{{this._id}}'>
+                                <input type="submit" name="delete-task" class="delete-task" value="Delete">
+                            </form>
+                        {{/if}}
+                        <form method="post" action='/task/complete/{{this._id}}'>
+                            <input type="submit" name="toggle-task" class="toggle-task" value="Mark complete">
+                        </form>
+                    </div>
+                {{else}}
+                    <div class="tasks-list-item">
+                        <span class="task-title">{{this.title}}</span>
+                        {{#if this.isOwner}}
+                            <form method="post" action='/task/delete/{{this._id}}'>
+                                <input type="submit" name="delete-task" class="delete-task" value="Delete">
+                            </form>
+                        {{/if}}
+                        <form method="post" action='/task/complete/{{this._id}}'>
+                            <input type="submit" name="toggle-task" class="toggle-task" value="Mark complete">
+                        </form>
+                    </div>
+                {{/if}}
             {{/each}}
-            </ul>
         {{else}}
             No tasks to show!
         {{/if}}
@@ -41,7 +53,7 @@
     <hr>
     <div>
         <h4>Add a new task</h4>
-        <form action="/task/create" method="POST">
+        <form action="/task/create" method="POST" class="create-task">
             <label for="title">Task title</label>
             <input name="title" type="text"><br>
             <label for="description">Task Description</label>
@@ -56,19 +68,18 @@
 
 {{else}}
 <div>
-    <form class="login" action="/user/login" method="POST">
-        <label for="email">Email</label>
+    <form class="login-form" action="/user/login" method="POST">
+        <input name="email" type='text' class="text-input" placeholder="Email">
         <input name="email" id="email" type="text"><br>
-        <label for="password">Password</label>
-        <input name="password"  id="password" type="text"><br>
-        <input type="submit"  class="log-in-submit">
+        <label name="password" type='text' class="password" placeholder="Password">
+        <input type="submit"  id="login-button" class="log-in-submit">
     </form>
 </div>
 
 <div><hr></div>
 
 <div>
-    <form class="register" action="/user/register" method="POST" class="signup-form" style="display: block;">
+    <form action="/user/register" method="POST" class="signup-form" style="display: block;">
       <input name="fl_name" type="text" class="text-input" placeholder="first &amp; last name">
       <input name="email" type="email" class="text-input" placeholder="email">
       <input name="password" type="password" class="text-input" placeholder="password">
